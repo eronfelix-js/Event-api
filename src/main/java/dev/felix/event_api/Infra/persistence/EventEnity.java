@@ -2,17 +2,15 @@ package dev.felix.event_api.Infra.persistence;
 
 import dev.felix.event_api.Core.Enums.TypeEvent;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDateTime;
 
+@Builder
 @Entity
 @Table(name = "Event")
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter @Setter
 public class EventEnity {
 
     @Id

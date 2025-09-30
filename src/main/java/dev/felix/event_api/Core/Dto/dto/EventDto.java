@@ -1,10 +1,11 @@
-package dev.felix.event_api.Core.Entity;
+package dev.felix.event_api.Core.Dto.dto;
+
 
 import dev.felix.event_api.Core.Enums.TypeEvent;
 
 import java.time.LocalDateTime;
 
-public record Event(
+public record EventDto(
         long id,
         String name,
         String description,
@@ -15,5 +16,5 @@ public record Event(
         String organization,
         TypeEvent type,
         Integer capacidade
-        ) {
+) {
 }

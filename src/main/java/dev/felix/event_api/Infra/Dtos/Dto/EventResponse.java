@@ -1,19 +1,21 @@
-package dev.felix.event_api.Core.Entity;
+package dev.felix.event_api.Infra.Dtos.Dto;
 
 import dev.felix.event_api.Core.Enums.TypeEvent;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 
-public record Event(
+@Builder
+public record EventResponse(
         long id,
         String name,
-        String description,
         String indentification,
+        String localEvent,
         LocalDateTime startDate,
         LocalDateTime endDate,
-        String localEvent,
         String organization,
+        String description,
         TypeEvent type,
         Integer capacidade
-        ) {
+) {
 }

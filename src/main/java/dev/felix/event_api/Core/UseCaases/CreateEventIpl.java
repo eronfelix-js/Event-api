@@ -5,7 +5,7 @@ import dev.felix.event_api.Core.Entity.Event;
 public class CreateEventIpl implements CreateEventCase{
 
     @Override
-    public Event create(Event event) {
+    public Event execute(Event event) {
         return null;
     }
 }

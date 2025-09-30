@@ -4,5 +4,5 @@ import dev.felix.event_api.Core.Entity.Event;
 
 public interface CreateEventCase {
 
-    public Event create(Event event);
+    public Event execute(Event event);
 }
