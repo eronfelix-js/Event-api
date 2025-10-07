@@ -3,16 +3,18 @@ package dev.felix.event_api.Core.UseCaases;
 import dev.felix.event_api.Core.Entity.Event;
 import dev.felix.event_api.Core.gateway.EventGateway;
 
-public class CreateEventIpl implements CreateEventCase{
+import java.util.List;
+
+public class ListEventCaseIpl implements ListEventCase {
 
     private final EventGateway eventGateway;
 
-    public CreateEventIpl(EventGateway eventGateway) {
+    public ListEventCaseIpl(EventGateway eventGateway) {
         this.eventGateway = eventGateway;
     }
 
     @Override
-    public Event execute(Event event) {
-        return eventGateway.createEvent(event);
+    public List<Event> execute() {
+        return eventGateway.listEvents();
     }
 }

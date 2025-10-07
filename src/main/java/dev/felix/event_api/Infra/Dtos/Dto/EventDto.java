@@ -6,7 +6,7 @@ import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Builder
-public record EventResponse(
+public record EventDto(
         long id,
         String name,
         String indentification,
@@ -17,5 +17,4 @@ public record EventResponse(
         String description,
         TypeEvent type,
         Integer capacidade
-) {
-}
+) { }

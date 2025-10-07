@@ -25,4 +25,6 @@ public class EventEnity {
     private String organization;
     @Enumerated(EnumType.STRING)
     private TypeEvent type;
+    private Integer capacidade;
+
 }

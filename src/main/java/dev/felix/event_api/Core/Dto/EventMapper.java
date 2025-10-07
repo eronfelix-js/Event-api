@@ -2,7 +2,6 @@ package dev.felix.event_api.Core.Dto;
 
 import dev.felix.event_api.Core.Dto.dto.EventDto;
 import dev.felix.event_api.Core.Entity.Event;
-import dev.felix.event_api.Infra.Dtos.Dto.EventResponse;
 import org.springframework.stereotype.Component;
 
 @Component
