@@ -4,5 +4,6 @@ public enum TypeEvent {
     PALESTRA,
     MUSICA,
     SEMINARIO,
-    WORKSHOP
+    WORKSHOP,
+    CONFERENCE
 }

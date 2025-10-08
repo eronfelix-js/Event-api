@@ -20,6 +20,7 @@ public class EventController {
     private final EventDtoMapper mapper;
 
     @PostMapping
+    @ResponseStatus(code = org.springframework.http.HttpStatus.CREATED)
     public EventDto create(@RequestBody EventDto eventDto){
         Event newEvent = create.execute(mapper.toResponse(eventDto));
         return mapper.toResquest(newEvent);

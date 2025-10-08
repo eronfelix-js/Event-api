@@ -3,6 +3,8 @@ package dev.felix.event_api.Infra.persistence;
 import dev.felix.event_api.Core.Enums.TypeEvent;
 import jakarta.persistence.*;
 import lombok.*;
+import org.antlr.v4.runtime.misc.NotNull;
+
 import java.time.LocalDateTime;
 
 @Builder
@@ -18,6 +20,7 @@ public class EventEnity {
     private long id;
     private String name;
     private String description;
+    @Column(unique = true, nullable = false)
     private String indentification;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
