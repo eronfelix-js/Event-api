@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +34,12 @@ public class EventRepositoryGateway implements EventGateway {
 
     @Override
     public boolean duplicatedIdentification(String identification) {
-        return eventRepository.existsByIndentification(identification);
+        return eventRepository.existsByIdentification(identification);
+    }
+
+    @Override
+    public Optional<Event> filterEventByIdentification(String identification) {
+        return eventRepository.findByIdentification(identification);
     }
 
 

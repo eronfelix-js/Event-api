@@ -3,7 +3,6 @@ package dev.felix.event_api.Infra.persistence;
 import dev.felix.event_api.Core.Enums.TypeEvent;
 import jakarta.persistence.*;
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -12,22 +11,40 @@ import java.time.LocalDateTime;
 @Table(name = "Event")
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 public class EventEnity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private long id;
-    private String name;
-    private String description;
-    @Column(unique = true, nullable = false)
-    private String indentification;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private String localEvent;
-    private String organization;
-    @Enumerated(EnumType.STRING)
-    private TypeEvent type;
-    private Integer capacidade;
 
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "identification", unique = true, nullable = false)
+    private String identification;
+
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+    @Column(name = "local_event")
+    private String localEvent;
+
+    @Column(name = "organization")
+    private String organization;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private TypeEvent type;
+
+    @Column(name = "capacidade")
+    private Integer capacidade;
 }

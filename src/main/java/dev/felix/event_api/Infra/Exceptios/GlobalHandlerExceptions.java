@@ -19,4 +19,9 @@ public class GlobalHandlerExceptions {
     public ResponseEntity<String> handleConstraintViolation(DataIntegrityViolationException ex) {
         return ResponseEntity.status(409).body("Event with this identification already exists.");
     }
+
+    @ExceptionHandler(NotFoundEventException.class)
+    public ResponseEntity<String> handleNotFoundEvent(NotFoundEventException ex) {
+        return ResponseEntity.status(404).body(ex.getMessage());
+    }
 }

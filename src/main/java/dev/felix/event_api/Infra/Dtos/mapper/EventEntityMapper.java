@@ -26,7 +26,7 @@ public class EventEntityMapper {
         return new Event(
                 eventEnity.getId(),
                 eventEnity.getName(),
-                eventEnity.getIndentification(),
+                eventEnity.getIdentification(),
                 eventEnity.getLocalEvent(),
                 eventEnity.getStartDate(),
                 eventEnity.getEndDate(),

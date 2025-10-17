@@ -1,14 +1,20 @@
 package dev.felix.event_api.Core.UseCaases;
 
-public class FilterIndetificationEventImpl {
+import dev.felix.event_api.Core.Entity.Event;
+import dev.felix.event_api.Core.gateway.EventGateway;
+import dev.felix.event_api.Infra.Exceptios.NotFoundEventException;
 
-    private String identification;
+public class FilterIndetificationEventImpl implements FilterIndentificationEventUsecase {
 
-    public FilterIndetificationEventImpl(String identification) {
-        this.identification = identification;
+    private final EventGateway eventGateway;
+
+    public FilterIndetificationEventImpl(EventGateway eventGateway) {
+        this.eventGateway = eventGateway;
     }
 
-    public String getIdentification() {
-        return identification;
+    @Override
+    public Event execute(String identification) {
+        return eventGateway.filterEventByIdentification(identification)
+                .orElseThrow(() -> new NotFoundEventException("Event "+identification+" not found"));
     }
 }
