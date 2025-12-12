@@ -1,0 +1,19 @@
+name: Build and Deploy Application
+on:
+    push:
+        branches: [main]
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v2
+
+          - name: Configure Java
+            uses: actions/setup-java@v3
+            with:
+              distribution: 'temurin'
+              java-version: '17'
+
+          - name: Build project
+            run: mvn clean install
