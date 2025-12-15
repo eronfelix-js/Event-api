@@ -16,3 +16,24 @@ jobs:
               java-version: '17'
           - name: Build project
             run: mvn clean install
+
+          - name: Build Artifact
+            run: mvn clean package
+
+          - name: Store Artifact
+            uses: actions/upload-artifact@v3
+            with:
+              name: myapp-jar
+              path: target/*.jar
+          - name: Deploy EC2
+            uses: appleboy/ssh-action@master
+            with:
+              host: ${{ secrets.EC2_HOST }}
+              username: ${{ secrets.EC2_USER }}
+              key: ${{ secrets.EC2_SSH_KEY }}
+              script: |
+                cd /home/ec2-user/event-api
+                aws s3 cp s3://seu-bucket/event-api.jar .
+                sudo systemctl stop event-api
+                sudo systemctl start event-api
+                sudo systemctl status event-api
