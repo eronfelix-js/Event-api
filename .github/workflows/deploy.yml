@@ -36,4 +36,4 @@ jobs:
                 aws s3 cp s3://seu-bucket/event-api.jar .
                 sudo systemctl stop event-api
                 sudo systemctl start event-api
-                sudo systemctl status event-api
+                sudo systemctl is-active event-api
