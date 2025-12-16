@@ -32,8 +32,10 @@ jobs:
               username: ${{ secrets.EC2_USER }}
               key: ${{ secrets.EC2_SSH_KEY }}
               script: |
+                set -e
                 cd /home/ec2-user/event-api
-                aws s3 cp s3://seu-bucket/event-api.jar .
-                sudo systemctl stop event-api
-                sudo systemctl start event-api
+                aws s3 cp s3://seu-bucket/event-api.jar event-api.new.jar
+                mv event-api.new.jar event-api.jar
+                sudo systemctl restart event-api
                 sudo systemctl is-active event-api
+              
