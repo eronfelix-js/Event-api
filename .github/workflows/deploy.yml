@@ -1,41 +1,113 @@
 name: Build and Deploy Application
+
 on:
-    push:
-        branches: [main]
+  push:
+    branches: [main]
+
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout repository
-            uses: actions/checkout@v2
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
-          - name: Configure Java
-            uses: actions/setup-java@v3
-            with:
-              distribution: 'temurin'
-              java-version: '17'
-          - name: Build project
-            run: mvn clean install
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-          - name: Build Artifact
-            run: mvn clean package
+      - name: Configure Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-          - name: Store Artifact
-            uses: actions/upload-artifact@v4
-            with:
-              name: myapp-jar
-              path: target/*.jar
-          - name: Deploy EC2
-            uses: appleboy/ssh-action@master
-            with:
-              host: ${{ secrets.EC2_HOST }}
-              username: ${{ secrets.EC2_USER }}
-              key: ${{ secrets.EC2_SSH_KEY }}
-              script: |
-                set -e
-                cd /home/ec2-user/event-api
-                aws s3 cp s3://seu-bucket/event-api.jar event-api.new.jar
-                mv event-api.new.jar event-api.jar
+      - name: Build project
+        run: mvn clean package -DskipTests
+
+      - name: Debug - Show built files
+        run: ls -lah target/
+
+      # Copiar JAR para EC2
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "target/*.jar"
+          target: "/home/ec2-user/event-api/"
+          strip_components: 1
+          timeout: 60s
+          command_timeout: 10m
+
+      # Deploy e restart
+      - name: Deploy and Restart Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          timeout: 60s
+          command_timeout: 10m
+          script: |
+            set -e
+            
+            echo "📦 Navegando para o diretório da aplicação..."
+            cd /home/ec2-user/event-api
+            
+            echo "📋 Listando arquivos recebidos..."
+            ls -lah
+            
+            # Backup do JAR antigo (se existir)
+            if [ -f event-api.jar ]; then
+              echo "💾 Fazendo backup do JAR anterior..."
+              cp event-api.jar event-api.jar.backup.$(date +%Y%m%d_%H%M%S)
+              # Manter apenas os 5 backups mais recentes
+              ls -t event-api.jar.backup.* 2>/dev/null | tail -n +6 | xargs -r rm
+            fi
+            
+            # Renomeia o novo JAR
+            echo "🔄 Renomeando novo JAR..."
+            JAR_FILE=$(ls -t *.jar 2>/dev/null | grep -v backup | head -n 1)
+            if [ -z "$JAR_FILE" ]; then
+              echo "❌ Erro: Nenhum arquivo JAR encontrado!"
+              exit 1
+            fi
+            
+            mv "$JAR_FILE" event-api.jar
+            chmod +x event-api.jar
+            
+            echo "🔄 Reiniciando serviço..."
+            sudo systemctl restart event-api
+            
+            # Aguarda o serviço subir
+            echo "⏳ Aguardando serviço iniciar..."
+            sleep 10
+            
+            # Verifica se está rodando
+            if sudo systemctl is-active --quiet event-api; then
+              echo "✅ Deploy realizado com sucesso!"
+              echo ""
+              echo "📊 Status do serviço:"
+              sudo systemctl status event-api --no-pager
+              echo ""
+              echo "📝 Últimas linhas do log:"
+              tail -n 20 /home/ec2-user/event-api/logs/application.log 2>/dev/null || echo "Logs ainda não disponíveis"
+            else
+              echo "❌ Erro ao iniciar o serviço!"
+              echo ""
+              echo "📝 Logs de erro:"
+              tail -n 50 /home/ec2-user/event-api/logs/error.log 2>/dev/null || echo "Sem logs de erro"
+            
+              # Tenta restaurar backup
+              LATEST_BACKUP=$(ls -t event-api.jar.backup.* 2>/dev/null | head -n 1)
+              if [ -n "$LATEST_BACKUP" ]; then
+                echo "🔙 Restaurando backup anterior..."
+                cp "$LATEST_BACKUP" event-api.jar
                 sudo systemctl restart event-api
-                sudo systemctl is-active event-api
-              
+                sleep 5
+                if sudo systemctl is-active --quiet event-api; then
+                  echo "✅ Backup restaurado com sucesso"
+                fi
+              fi
+              exit 1
+            fi
