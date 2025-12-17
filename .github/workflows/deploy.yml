@@ -4,31 +4,35 @@ on:
     branches: [main]
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, event-api]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Build JAR
-        run: mvn clean package -DskipTests
+      - name: Build application
+        run: |
+          mvn clean package -DskipTests
 
-      - name: Deploy
+      - name: Deploy application
         run: |
           set -e
+          APP_DIR=/opt/event-api
+          JAR_NAME=event-api.jar
+          NEW_JAR=$(ls target/*jar | grep -v original | head -n 1)
 
           echo "🛑 Parando serviço"
           sudo systemctl stop event-api || true
 
-          echo "📦 Backup"
-          if [ -f /opt/event-api/event-api.jar ]; then
-            cp /opt/event-api/event-api.jar /opt/event-api/event-api.jar.bak
+          echo "📦 Backup do JAR atual"
+          if [ -f "$APP_DIR/$JAR_NAME" ]; then
+            cp "$APP_DIR/$JAR_NAME" "$APP_DIR/$JAR_NAME.bak"
           fi
 
-          echo "🚀 Atualizando JAR"
-          cp target/*.jar /opt/event-api/event-api.jar
+          echo "🚀 Copiando novo JAR: $NEW_JAR"
+          cp "$NEW_JAR" "$APP_DIR/$JAR_NAME"
 
           echo "▶️ Iniciando serviço"
           sudo systemctl start event-api
 
-          echo "📊 Status"
+          echo "📊 Status final"
           sudo systemctl status event-api --no-pager
