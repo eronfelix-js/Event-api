@@ -1,60 +1,37 @@
-name: Build and Deploy Application
+name: Deploy Event API (Self-hosted)
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Configure Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Build project
+      - name: Build JAR
         run: mvn clean package -DskipTests
 
-      - name: Get JAR info
-        id: jar
+      - name: Deploy
         run: |
-          JAR_FILE=$(ls target/*.jar | head -n 1)
-          JAR_SIZE=$(stat -c%s "$JAR_FILE")
-          echo "file=$JAR_FILE" >> $GITHUB_OUTPUT
-          echo "name=$(basename $JAR_FILE)" >> $GITHUB_OUTPUT
-          echo "size=$JAR_SIZE" >> $GITHUB_OUTPUT
-          echo "📦 JAR construído: $(basename $JAR_FILE)"
-          echo "📊 Tamanho: $(numfmt --to=iec-i --suffix=B $JAR_SIZE)"
+          set -e
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "🛑 Parando serviço"
+          sudo systemctl stop event-api || true
 
-      - name: Transfer JAR to EC2
-        run: |
-          echo "📤 Transferindo JAR para EC2..."
-          cat ${{ steps.jar.outputs.file }} | \
-          ssh -i ~/.ssh/deploy_key \
-            -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=60 \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "cat > /home/ec2-user/event-api/event-api.new.jar"
-          
-          echo "✅ Transferência concluída!"
+          echo "📦 Backup"
+          if [ -f /opt/event-api/event-api.jar ]; then
+            cp /opt/event-api/event-api.jar /opt/event-api/event-api.jar.bak
+          fi
 
-      - name: Deploy and Restart Service
-        uses: easingthemes/ssh-deploy@main
-        env:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          target: /home/ec2-user
+          echo "🚀 Atualizando JAR"
+          cp target/*.jar /opt/event-api/event-api.jar
+
+          echo "▶️ Iniciando serviço"
+          sudo systemctl start event-api
+
+          echo "📊 Status"
+          sudo systemctl status event-api --no-pager
