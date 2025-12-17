@@ -14,7 +14,62 @@ jobs:
           mvn clean package -DskipTests
 
       - name: Deploy application
-        run: |
+        run: |# yaml
+        name: Build and Deploy (Self-hosted on EC2)
+        on:
+          push:
+            branches: [main]
+
+        jobs:
+          build-and-deploy:
+            runs-on: [self-hosted, event-api]
+            steps:
+              - name: Checkout code
+                uses: actions/checkout@v4
+
+              - name: Setup Java
+                uses: actions/setup-java@v3
+                with:
+                  distribution: 'temurin'
+                  java-version: '17'
+
+              - name: Build
+                run: mvn clean package -DskipTests
+
+              - name: Deploy jar to /opt/event-api and restart service
+                run: |
+                  set -e
+                  APP_DIR=/opt/event-api
+                  JAR_NAME=event-api.jar
+                  APP_USER=ec2-user
+        
+                  NEW_JAR=$(ls target/*jar | grep -v original | head -n 1)
+                  if [ -z "$NEW_JAR" ]; then
+                    echo "No jar found in target/"; exit 1
+                  fi
+        
+                  echo "Stopping service"
+                  sudo systemctl stop event-api || true
+        
+                  echo "Ensure app dir and permissions"
+                  sudo mkdir -p "$APP_DIR"
+                  sudo chown "$APP_USER":"$APP_USER" "$APP_DIR"
+        
+                  echo "Backup current jar if exists"
+                  if [ -f "$APP_DIR/$JAR_NAME" ]; then
+                    sudo cp "$APP_DIR/$JAR_NAME" "$APP_DIR/$JAR_NAME.bak"
+                  fi
+        
+                  echo "Copying new jar: $NEW_JAR"
+                  sudo cp "$NEW_JAR" "$APP_DIR/$JAR_NAME"
+                  sudo chown "$APP_USER":"$APP_USER" "$APP_DIR/$JAR_NAME"
+                  sudo chmod 644 "$APP_DIR/$JAR_NAME"
+        
+                  echo "Starting service"
+                  sudo systemctl start event-api
+        
+                  echo "Service status"
+                  sudo systemctl status event-api --no-pager
           set -e
           APP_DIR=/opt/event-api
           JAR_NAME=event-api.jar
