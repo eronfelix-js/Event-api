@@ -1,8 +1,9 @@
 spring:
   application:
     name: comprasJa
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/eventapi
+    url: jdbc:postgresql://localhost:5432/event_api
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
